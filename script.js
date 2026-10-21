@@ -591,7 +591,7 @@ async function loadMembers() {
     if (membersTableBody) {
         membersTableBody.innerHTML = `
             <tr>
-                <td colspan="14" class="table-message">
+                <td colspan="13" class="table-message">
                     Loading members...
                 </td>
             </tr>
@@ -599,40 +599,38 @@ async function loadMembers() {
     }
 
     try {
-        const { data, error } =
-            await supabaseClient
-                .from("idogwu_members")
-                .select(`
-                    id,
-                    full_name,
-                    phone,
-                    location,
-                    gender,
-                    age,
-                    education,
-                    marital_status,
-                    occupation,
-                    amount,
-                    purpose,
-                    created_at
-                `)
-                    .order("full_name", {
-                    ascending: true
+        const { data, error } = await supabaseClient
+            .from("idogwu_members")
+            .select(`
+                id,
+                full_name,
+                phone,
+                email,
+                location,
+                gender,
+                age,
+                education,
+                marital_status,
+                occupation,
+                amount,
+                purpose,
+                created_at
+            `)
+            .order("full_name", {
+                ascending: true
             });
 
         if (error) {
             console.error("Load members error:", error);
 
-            if (membersTableBody) {
-                membersTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="14" class="table-message">
-                            Unable to load members. ${escapeHTML(error.message)}
-                        </td>
-                    </tr>
-                `;
-            }
-
+            membersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="13" class="table-message">
+                        Unable to load members.
+                        ${escapeHTML(error.message)}
+                    </td>
+                </tr>
+            `;
             return;
         }
 
@@ -641,21 +639,19 @@ async function loadMembers() {
         updateDashboard();
         renderMembers();
         renderLocationStatistics();
+
     } catch (error) {
         console.error("Unexpected load error:", error);
 
-        if (membersTableBody) {
-            membersTableBody.innerHTML = `
-                <tr>
-                    <td colspan="14" class="table-message">
-                        An unexpected error occurred while loading members.
-                    </td>
-                </tr>
-            `;
-        }
+        membersTableBody.innerHTML = `
+            <tr>
+                <td colspan="13" class="table-message">
+                    An unexpected error occurred while loading members.
+                </td>
+            </tr>
+        `;
     }
 }
-
 
 // =========================================================
 // UPDATE DASHBOARD

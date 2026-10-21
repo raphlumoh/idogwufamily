@@ -697,7 +697,6 @@ function renderMembers() {
     <td>${escapeHTML(member.age ?? "")}</td>
     <td>${escapeHTML(member.education ?? "")}</td>
     <td>${escapeHTML(member.marital_status)}</td>
-    <td>${escapeHTML(member.occupation ?? "")}</td>
     <td>${formatCurrency(Number(member.amount || 0))}</td>
     <td>${escapeHTML(member.purpose ?? "")}</td>
     <td>${formatDate(member.created_at)}</td>

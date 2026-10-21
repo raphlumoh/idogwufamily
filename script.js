@@ -602,13 +602,11 @@ async function loadMembers() {
                 id,
                 full_name,
                 phone,
-                email,
                 location,
                 gender,
                 age,
                 education,
                 marital_status,
-                occupation,
                 amount,
                 purpose,
                 created_at

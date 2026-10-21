@@ -1006,29 +1006,35 @@ async function saveMember() {
         return;
     }
 
+    // Get age and education values
+const ageText = age?.value.trim() || "";
+const educationValue = education?.value.trim() || "";
+
+// Validate age only when the user enters one
+let ageValue = null;
+
+if (ageText !== "") {
+    ageValue = Number(ageText);
+
     if (
-        !ageText ||
         !Number.isInteger(ageValue) ||
-        ageValue < 1 ||
-        ageValue > 120
+        ageValue < 0 ||
+        ageValue > 150
     ) {
         showMemberMessage(
-            "Please enter a valid age between 1 and 120.",
+            "Please enter a valid age.",
             "error"
         );
-        age?.focus();
         return;
     }
+}
 
-    if (!educationValue) {
-        showMemberMessage(
-            "Please select the highest educational qualification.",
-            "error"
-        );
-        education?.focus();
-        return;
-    }
-
+// Save empty values as null
+const memberData = {
+    age: ageText ? ageValue : null,
+    education: educationValue || null
+};
+    
     if (!maritalStatusValue) {
         showMemberMessage(
             "Please select the marital status.",

@@ -956,12 +956,13 @@ async function saveMember() {
         );
 
     } catch (error) {
-        console.error("Save error:", error);
+    console.error("Save member failed:", error);
 
-        showMemberMessage(
-            "Unable to save member. Please try again.",
-            "error"
-        );
+    showMemberMessage(
+        "Save failed: " + (error?.message || String(error)),
+        "error"
+    );
+
     } finally {
         if (saveMemberButton) {
             saveMemberButton.disabled = false;

@@ -814,7 +814,6 @@ function renderMembers() {
             <td>${index + 1}</td>
             <td>${escapeHTML(member.full_name)}</td>
             <td>${escapeHTML(member.phone)}</td>
-            <td>${escapeHTML(member.email)}</td>
             <td>${escapeHTML(member.location)}</td>
             <td>${escapeHTML(member.gender)}</td>
             <td>${escapeHTML(member.age)}</td>

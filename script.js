@@ -617,9 +617,9 @@ async function loadMembers() {
                     purpose,
                     created_at
                 `)
-                .order("created_at", {
-                    ascending: false
-                });
+                    .order("full_name", {
+                    ascending: true
+            });
 
         if (error) {
             console.error("Load members error:", error);

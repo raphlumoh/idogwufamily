@@ -923,9 +923,7 @@ async function saveMember() {
 
     const nameValue = fullName?.value.trim() || "";
     const phoneValue = phone?.value.trim() || "";
-    const emailValue = email?.value.trim() || "";
     const locationValue = locationInput?.value.trim() || "";
-
     const genderValue = gender?.value || "";
     const ageText = age?.value.trim() || "";
     let ageValue = null;
@@ -1040,15 +1038,11 @@ async function saveMember() {
         const memberData = {
             full_name: nameValue,
             phone: phoneValue,
-            email: emailValue || null,
             location: locationValue,
-
             gender: genderValue,
             age: ageText ? ageValue : null,
             education: educationValue || null,
             marital_status: maritalStatusValue,
-            occupation: occupationValue || null,
-
             amount: amountValue,
             purpose: purposeValue || null
         };
@@ -1133,10 +1127,6 @@ async function editMember(id) {
         phone.value = member.phone || "";
     }
 
-    if (email) {
-        email.value = member.email || "";
-    }
-
     if (locationInput) {
         locationInput.value = member.location || "";
     }
@@ -1155,10 +1145,6 @@ async function editMember(id) {
 
     if (maritalStatus) {
         maritalStatus.value = member.marital_status || "";
-    }
-
-    if (occupation) {
-        occupation.value = member.occupation || "";
     }
 
     if (amount) {

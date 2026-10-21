@@ -688,21 +688,21 @@ function renderMembers() {
             `
             : `<span>View only</span>`;
 
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${escapeHTML(member.full_name)}</td>
-            <td>${escapeHTML(member.phone)}</td>
-            <td>${escapeHTML(member.location)}</td>
-            <td>${escapeHTML(member.gender)}</td>
-            <td>${escapeHTML(member.age)}</td>
-            <td>${escapeHTML(member.education)}</td>
-            <td>${escapeHTML(member.marital_status)}</td>
-            <td>${formatCurrency(amountValue)}</td>
-            <td>${escapeHTML(member.purpose)}</td>
-            <td>${formatDate(member.created_at)}</td>
-            <td>${actionHTML}</td>
-        `;
-
+       row.innerHTML = `
+    <td>${index + 1}</td>
+    <td>${escapeHTML(member.full_name)}</td>
+    <td>${escapeHTML(member.phone)}</td>
+    <td>${escapeHTML(member.location)}</td>
+    <td>${escapeHTML(member.gender)}</td>
+    <td>${escapeHTML(member.age ?? "")}</td>
+    <td>${escapeHTML(member.education ?? "")}</td>
+    <td>${escapeHTML(member.marital_status)}</td>
+    <td>${escapeHTML(member.occupation ?? "")}</td>
+    <td>${formatCurrency(Number(member.amount || 0))}</td>
+    <td>${escapeHTML(member.purpose ?? "")}</td>
+    <td>${formatDate(member.created_at)}</td>
+    <td>${actionHTML}</td>
+`;
         membersTableBody.appendChild(row);
     });
 }

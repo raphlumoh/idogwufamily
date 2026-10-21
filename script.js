@@ -606,7 +606,6 @@ async function loadMembers() {
                     id,
                     full_name,
                     phone,
-                    email,
                     location,
                     gender,
                     age,

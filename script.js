@@ -78,9 +78,6 @@ const fullName =
 const phone =
     document.getElementById("phone");
 
-const email =
-    document.getElementById("email");
-
 const locationInput =
     document.getElementById("location");
 

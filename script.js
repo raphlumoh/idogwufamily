@@ -1,3 +1,4 @@
+
 "use strict";
 
 /* IDOGWU FAMILY DATABASE — complete script.js
@@ -165,6 +166,7 @@ function setupEventListeners() {
       currentRole = "member";
       currentUsername = "";
       allMembers = [];
+      allPaymentRecords = [];
       closePaymentHistoryModal();
       showLoginScreen();
     }
@@ -302,6 +304,7 @@ async function logoutUser() {
   currentRole = "member";
   currentUsername = "";
   allMembers = [];
+  allPaymentRecords = [];
 
   clearMemberForm();
   closePaymentHistoryModal();
@@ -313,7 +316,7 @@ async function loadMembers() {
 
   if (membersTableBody) {
     membersTableBody.innerHTML =
-      '<tr><td colspan="12" class="table-message">Loading members...</td></tr>';
+      '<tr><td colspan="13" class="table-message">Loading members...</td></tr>';
   }
 
   try {
@@ -335,7 +338,7 @@ async function loadMembers() {
 
     if (membersTableBody) {
       membersTableBody.innerHTML =
-        `<tr><td colspan="12" class="table-message">Unable to load members: ${escapeHTML(error.message || "Unknown error")}</td></tr>`;
+        `<tr><td colspan="13" class="table-message">Unable to load members: ${escapeHTML(error.message || "Unknown error")}</td></tr>`;
     }
   }
 }
@@ -358,6 +361,9 @@ async function refreshPaymentDashboard() {
   }
 
   updateDashboard();
+
+  // Refresh each member's Total Paid column as well as the dashboard.
+  renderMembers();
 }
 
 function updateDashboard() {
@@ -399,6 +405,20 @@ function updateDashboard() {
   if (totalLocations) totalLocations.textContent = locations.size;
 }
 
+// NEW: calculate the total payment-history amount for one member.
+function getMemberTotalPaid(memberIdValue) {
+  if (paymentDashboardError) return null;
+
+  return allPaymentRecords.reduce((sum, payment) => {
+    if (String(payment.member_id) !== String(memberIdValue)) {
+      return sum;
+    }
+
+    const value = Number(payment.amount || 0);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+}
+
 function memberMatchesSearch(member, term) {
   return [
     member.full_name,
@@ -423,7 +443,7 @@ function renderMembers() {
 
   if (!list.length) {
     membersTableBody.innerHTML =
-      '<tr><td colspan="12" class="table-message">No members found.</td></tr>';
+      '<tr><td colspan="13" class="table-message">No members found.</td></tr>';
     return;
   }
 
@@ -455,6 +475,12 @@ function renderMembers() {
       </div>
     `;
 
+    // Show a dash if payment history could not be loaded.
+    const memberTotalPaid = getMemberTotalPaid(member.id);
+    const totalPaidDisplay = memberTotalPaid === null
+      ? "Unable to load"
+      : formatCurrency(memberTotalPaid);
+
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${escapeHTML(member.full_name)}</td>
@@ -467,6 +493,7 @@ function renderMembers() {
       <td>${formatCurrency(member.amount || 0)}</td>
       <td>${escapeHTML(member.purpose ?? "")}</td>
       <td>${formatDate(member.created_at)}</td>
+      <td>${totalPaidDisplay}</td>
       <td>${actions}</td>
     `;
 
@@ -513,6 +540,7 @@ function renderLocationStatistics() {
       locationStatistics.appendChild(card);
     });
 }
+
 async function saveMember() {
   if (!isAdmin()) {
     return showMemberMessage(
@@ -826,6 +854,7 @@ function exportCSV() {
 
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
 /* -------------------- PAYMENT HISTORY -------------------- */
 
 function localDateInputValue() {
@@ -1093,7 +1122,7 @@ async function savePayment(event) {
       "success"
     );
 
-    // Refresh general dashboard totals after saving a payment.
+    // Refresh dashboard and per-member Total Paid after saving.
     await refreshPaymentDashboard();
     await loadPaymentHistory();
   } catch (error) {
@@ -1188,7 +1217,7 @@ async function deletePaymentRecord(id) {
     resetPaymentForm();
     showPaymentMessage("Payment deleted successfully.", "success");
 
-    // Refresh general dashboard totals after deleting a payment.
+    // Refresh dashboard and per-member Total Paid after deleting.
     await refreshPaymentDashboard();
     await loadPaymentHistory();
   } catch (error) {

@@ -1,9 +1,8 @@
 "use strict";
 
 /* IDOGWU FAMILY DATABASE — complete script.js
-   Age and education are optional.
-   Payment history is stored separately in public.idogwu_payment_history.
-*/
+   Age and education are optional. Email and occupation are not member fields.
+   Payment history is stored separately in public.idogwu_payment_history. */
 
 const SUPABASE_URL = "https://hzqawunnchuryzgmgiwi.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IBjtMX_HXiG1drNw8MksRg_PtddAlBa";
@@ -18,11 +17,12 @@ let currentUser = null;
 let currentRole = "member";
 let currentUsername = "";
 let allMembers = [];
+let allPaymentRecords = [];
+let paymentDashboardError = false;
 let activeHistoryMemberId = null;
 
 const $ = (id) => document.getElementById(id);
 
-// Login elements
 const adminLoginBox = $("adminLoginBox");
 const adminApplication = $("adminApplication");
 const adminEmail = $("adminEmail");
@@ -33,7 +33,6 @@ const loginMessage = $("loginMessage");
 const logoutButton = $("logoutButton");
 const loggedInUser = $("loggedInUser");
 
-// Member form elements
 const memberId = $("memberId");
 const fullName = $("fullName");
 const phone = $("phone");
@@ -48,7 +47,6 @@ const saveMemberButton = $("saveMemberButton");
 const clearFormButton = $("clearFormButton");
 const memberMessage = $("memberMessage");
 
-// Table, search and dashboard
 const searchInput = $("searchInput");
 const refreshButton = $("refreshButton");
 const exportButton = $("exportButton");
@@ -62,7 +60,6 @@ const averageAmount = $("averageAmount");
 const totalLocations = $("totalLocations");
 const locationStatistics = $("locationStatistics");
 
-// Password recovery elements
 const forgotPasswordBox = $("forgotPasswordBox");
 const recoveryEmail = $("recoveryEmail");
 const sendRecoveryButton = $("sendRecoveryButton");
@@ -75,7 +72,6 @@ const confirmAdminPassword = $("confirmAdminPassword");
 const saveNewPassword = $("saveNewPassword");
 const resetMessage = $("resetMessage");
 
-// Payment history elements
 const paymentHistoryBox = $("paymentHistoryBox");
 const paymentHistoryMemberName = $("paymentHistoryMemberName");
 const paymentHistoryTotal = $("paymentHistoryTotal");
@@ -92,7 +88,6 @@ const cancelPaymentEdit = $("cancelPaymentEdit");
 const paymentActionsHeading = $("paymentActionsHeading");
 const closePaymentHistory = $("closePaymentHistory");
 
-// Initial screen setup
 if (adminApplication) adminApplication.style.display = "none";
 if (adminLoginBox) adminLoginBox.style.display = "block";
 if (paymentHistoryBox) paymentHistoryBox.style.display = "none";
@@ -101,10 +96,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupEventListeners();
   await checkExistingSession();
 });
-
-// --------------------------------------------------
-// EVENT LISTENERS
-// --------------------------------------------------
 
 function setupEventListeners() {
   adminLoginButton?.addEventListener("click", loginUser);
@@ -130,32 +121,24 @@ function setupEventListeners() {
     if (e.key === "Enter") sendPasswordRecovery();
   });
 
-  // Member table actions
   membersTableBody?.addEventListener("click", (e) => {
     const button = e.target.closest("button[data-action]");
-
     if (!button || !membersTableBody.contains(button)) return;
 
     const id = button.dataset.id;
     if (!id) return;
 
-    if (button.dataset.action === "history") {
-      openPaymentHistory(id);
-    } else if (button.dataset.action === "edit") {
-      editMember(id);
-    } else if (button.dataset.action === "delete") {
-      deleteMember(id);
-    }
+    if (button.dataset.action === "history") openPaymentHistory(id);
+    else if (button.dataset.action === "edit") editMember(id);
+    else if (button.dataset.action === "delete") deleteMember(id);
   });
 
-  // Payment form actions
   paymentForm?.addEventListener("submit", savePayment);
   cancelPaymentEdit?.addEventListener("click", resetPaymentForm);
   closePaymentHistory?.addEventListener("click", closePaymentHistoryModal);
 
   paymentHistoryBody?.addEventListener("click", (e) => {
     const button = e.target.closest("button[data-payment-action]");
-
     if (!button || !paymentHistoryBody.contains(button)) return;
 
     if (!isAdmin()) {
@@ -171,7 +154,6 @@ function setupEventListeners() {
     }
   });
 
-  // Supabase authentication events
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY") {
       currentUser = session?.user || null;
@@ -183,21 +165,15 @@ function setupEventListeners() {
       currentRole = "member";
       currentUsername = "";
       allMembers = [];
-
       closePaymentHistoryModal();
       showLoginScreen();
     }
   });
 }
 
-// --------------------------------------------------
-// LOGIN AND USER SESSION
-// --------------------------------------------------
-
 async function checkExistingSession() {
   try {
     const { data, error } = await supabaseClient.auth.getSession();
-
     if (error) throw error;
 
     if (data?.session?.user) {
@@ -217,14 +193,10 @@ async function loginUser() {
   const password = adminPassword?.value || "";
 
   if (!email || !password) {
-    return showLoginMessage(
-      "Please enter your email and password.",
-      "error"
-    );
+    return showLoginMessage("Please enter your email and password.", "error");
   }
 
   if (adminLoginButton) adminLoginButton.disabled = true;
-
   showLoginMessage("Signing in...", "info");
 
   try {
@@ -236,13 +208,11 @@ async function loginUser() {
     if (error) throw error;
 
     currentUser = data.user;
-
     if (adminPassword) adminPassword.value = "";
 
     await startApplication();
   } catch (error) {
     console.error("Login:", error);
-
     showLoginMessage(
       error.message || "Unable to sign in. Please try again.",
       "error"
@@ -256,7 +226,6 @@ async function startApplication() {
   if (!currentUser) return showLoginScreen();
 
   await loadUserRole(currentUser.id);
-
   showApplication();
   await loadMembers();
 }
@@ -276,14 +245,10 @@ async function loadUserRole(userId) {
 
     if (data) {
       currentRole = String(data.role || "member").toLowerCase();
-
-      if (data.username) {
-        currentUsername = data.username;
-      }
+      if (data.username) currentUsername = data.username;
     }
   } catch (error) {
     console.error("Role lookup:", error);
-
     showLoginMessage(
       "Your role could not be verified. Some features may be unavailable.",
       "error"
@@ -300,21 +265,10 @@ function isAdmin() {
 function applyPermissions() {
   const section = $("memberRegistrationSection");
 
-  if (section) {
-    section.style.display = isAdmin() ? "block" : "none";
-  }
-
-  if (exportButton) {
-    exportButton.style.display = isAdmin() ? "inline-block" : "none";
-  }
-
-  if (paymentForm) {
-    paymentForm.style.display = isAdmin() ? "block" : "none";
-  }
-
-  if (paymentActionsHeading) {
-    paymentActionsHeading.style.display = isAdmin() ? "" : "none";
-  }
+  if (section) section.style.display = isAdmin() ? "block" : "none";
+  if (exportButton) exportButton.style.display = isAdmin() ? "inline-block" : "none";
+  if (paymentForm) paymentForm.style.display = isAdmin() ? "block" : "none";
+  if (paymentActionsHeading) paymentActionsHeading.style.display = isAdmin() ? "" : "none";
 }
 
 function showApplication() {
@@ -322,25 +276,21 @@ function showApplication() {
   if (adminApplication) adminApplication.style.display = "block";
 
   if (loggedInUser) {
-    loggedInUser.textContent =
-      `Logged in as: ${currentUsername} (${currentRole})`;
+    loggedInUser.textContent = `Logged in as: ${currentUsername} (${currentRole})`;
   }
 }
 
 function showLoginScreen() {
   if (adminApplication) adminApplication.style.display = "none";
   if (adminLoginBox) adminLoginBox.style.display = "block";
-
   if (adminEmail) adminEmail.value = "";
   if (adminPassword) adminPassword.value = "";
-
   showLoginMessage("", "");
 }
 
 async function logoutUser() {
   try {
     const { error } = await supabaseClient.auth.signOut();
-
     if (error) throw error;
   } catch (error) {
     console.error("Logout:", error);
@@ -357,10 +307,6 @@ async function logoutUser() {
   closePaymentHistoryModal();
   showLoginScreen();
 }
-
-// --------------------------------------------------
-// LOAD MEMBERS AND DASHBOARD
-// --------------------------------------------------
 
 async function loadMembers() {
   if (!currentUser) return;
@@ -381,8 +327,7 @@ async function loadMembers() {
     if (error) throw error;
 
     allMembers = data || [];
-
-    updateDashboard();
+    await refreshPaymentDashboard();
     renderMembers();
     renderLocationStatistics();
   } catch (error) {
@@ -395,48 +340,63 @@ async function loadMembers() {
   }
 }
 
+async function refreshPaymentDashboard() {
+  try {
+    // Dashboard contribution figures come from payment history only.
+    const { data, error } = await supabaseClient
+      .from("idogwu_payment_history")
+      .select("member_id, amount");
+
+    if (error) throw error;
+
+    allPaymentRecords = data || [];
+    paymentDashboardError = false;
+  } catch (error) {
+    console.error("Load dashboard payment totals:", error);
+    allPaymentRecords = [];
+    paymentDashboardError = true;
+  }
+
+  updateDashboard();
+}
+
 function updateDashboard() {
   const total = allMembers.length;
-
-  let paid = 0;
-  let unpaid = 0;
   let sum = 0;
 
+  const paidMemberIds = new Set();
   const locations = new Set();
 
-  allMembers.forEach((member) => {
-    const memberAmount = Number(member.amount || 0);
+  allPaymentRecords.forEach((payment) => {
+    const value = Number(payment.amount || 0);
 
-    sum += memberAmount;
-
-    if (memberAmount > 0) {
-      paid++;
-    } else {
-      unpaid++;
-    }
-
-    const location = String(member.location || "").trim();
-
-    if (location) {
-      locations.add(location.toLowerCase());
-    }
+    if (Number.isFinite(value)) sum += value;
+    if (value > 0) paidMemberIds.add(String(payment.member_id));
   });
 
+  const paid = allMembers.filter((member) =>
+    paidMemberIds.has(String(member.id))
+  ).length;
+
+  const unpaid = Math.max(0, total - paid);
+
+  allMembers
+    .map((member) => String(member.location || "").trim())
+    .filter(Boolean)
+    .forEach((location) => locations.add(location.toLowerCase()));
+
   if (totalMembers) totalMembers.textContent = total;
-  if (paidMembers) paidMembers.textContent = paid;
-  if (unpaidMembers) unpaidMembers.textContent = unpaid;
-
+  if (paidMembers) paidMembers.textContent = paymentDashboardError ? "—" : paid;
+  if (unpaidMembers) unpaidMembers.textContent = paymentDashboardError ? "—" : unpaid;
   if (totalAmount) {
-    totalAmount.textContent = formatCurrency(sum);
+    totalAmount.textContent = paymentDashboardError ? "Unable to load" : formatCurrency(sum);
   }
-
   if (averageAmount) {
-    averageAmount.textContent = formatCurrency(total ? sum / total : 0);
+    averageAmount.textContent = paymentDashboardError
+      ? "Unable to load"
+      : formatCurrency(allPaymentRecords.length ? sum / allPaymentRecords.length : 0);
   }
-
-  if (totalLocations) {
-    totalLocations.textContent = locations.size;
-  }
+  if (totalLocations) totalLocations.textContent = locations.size;
 }
 
 function memberMatchesSearch(member, term) {
@@ -457,7 +417,6 @@ function renderMembers() {
   if (!membersTableBody) return;
 
   const term = String(searchInput?.value || "").trim().toLowerCase();
-
   const list = term
     ? allMembers.filter((member) => memberMatchesSearch(member, term))
     : allMembers;
@@ -475,27 +434,19 @@ function renderMembers() {
 
     const actions = `
       <div class="action-buttons">
-        <button type="button"
-          class="btn btn-primary"
-          data-action="history"
-          data-id="${escapeHTML(member.id)}">
+        <button type="button" class="btn btn-primary"
+          data-action="history" data-id="${escapeHTML(member.id)}">
           View History
         </button>
-
         ${
           isAdmin()
             ? `
-              <button type="button"
-                class="btn btn-warning"
-                data-action="edit"
-                data-id="${escapeHTML(member.id)}">
+              <button type="button" class="btn btn-warning"
+                data-action="edit" data-id="${escapeHTML(member.id)}">
                 Edit
               </button>
-
-              <button type="button"
-                class="btn btn-danger"
-                data-action="delete"
-                data-id="${escapeHTML(member.id)}">
+              <button type="button" class="btn btn-danger"
+                data-action="delete" data-id="${escapeHTML(member.id)}">
                 Delete
               </button>
             `
@@ -537,15 +488,10 @@ function renderLocationStatistics() {
   const counts = {};
 
   allMembers.forEach((member) => {
-    const name = String(member.location || "").trim() ||
-      "Location Not Provided";
-
+    const name = String(member.location || "").trim() || "Location Not Provided";
     const key = name.toLowerCase();
 
-    if (!counts[key]) {
-      counts[key] = { name, count: 0 };
-    }
-
+    if (!counts[key]) counts[key] = { name, count: 0 };
     counts[key].count++;
   });
 
@@ -561,18 +507,12 @@ function renderLocationStatistics() {
 
       const count = document.createElement("div");
       count.className = "location-count";
-      count.textContent =
-        `${item.count} ${item.count === 1 ? "Member" : "Members"}`;
+      count.textContent = `${item.count} ${item.count === 1 ? "Member" : "Members"}`;
 
       card.append(name, count);
       locationStatistics.appendChild(card);
     });
 }
-
-// --------------------------------------------------
-// ADD, EDIT AND DELETE MEMBERS
-// --------------------------------------------------
-
 async function saveMember() {
   if (!isAdmin()) {
     return showMemberMessage(
@@ -681,9 +621,7 @@ async function saveMember() {
     if (result.error) throw result.error;
 
     if (editing && !result.data?.length) {
-      throw new Error(
-        "No member was updated. Check Supabase permissions."
-      );
+      throw new Error("No member was updated. Check Supabase permissions.");
     }
 
     clearMemberForm();
@@ -697,7 +635,6 @@ async function saveMember() {
     );
   } catch (error) {
     console.error("Save member:", error);
-
     showMemberMessage(
       `Unable to save member: ${error.message || error}`,
       "error"
@@ -758,11 +695,11 @@ async function deleteMember(id) {
     return alert("Member not found. Please refresh and try again.");
   }
 
-  const confirmed = confirm(
+  if (!confirm(
     `Delete ${member.full_name || "this member"}? Related payment history may also be deleted by the database foreign-key rule.`
-  );
-
-  if (!confirmed) return;
+  )) {
+    return;
+  }
 
   try {
     const { data, error } = await supabaseClient
@@ -774,21 +711,16 @@ async function deleteMember(id) {
     if (error) throw error;
 
     if (!data?.length) {
-      throw new Error(
-        "No member was deleted. Check Supabase permissions."
-      );
+      throw new Error("No member was deleted. Check Supabase permissions.");
     }
 
-    if (String(memberId?.value) === String(id)) {
-      clearMemberForm();
-    }
+    if (String(memberId?.value) === String(id)) clearMemberForm();
 
     if (String(activeHistoryMemberId) === String(id)) {
       closePaymentHistoryModal();
     }
 
     await loadMembers();
-
     alert("Member deleted successfully.");
   } catch (error) {
     console.error("Delete member:", error);
@@ -822,10 +754,6 @@ function clearMemberForm() {
     memberMessage.className = "message";
   }
 }
-
-// --------------------------------------------------
-// EXPORT MEMBERS TO CSV
-// --------------------------------------------------
 
 function exportCSV() {
   if (!isAdmin()) {
@@ -898,10 +826,7 @@ function exportCSV() {
 
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-// --------------------------------------------------
-// PAYMENT HISTORY
-// --------------------------------------------------
+/* -------------------- PAYMENT HISTORY -------------------- */
 
 function localDateInputValue() {
   const date = new Date();
@@ -973,7 +898,6 @@ function openPaymentHistory(id) {
   showPaymentMessage("", "");
 
   paymentHistoryBox.style.display = "flex";
-
   loadPaymentHistory();
 }
 
@@ -1001,16 +925,13 @@ async function loadPaymentHistory() {
   try {
     const { data, error } = await supabaseClient
       .from("idogwu_payment_history")
-      .select(
-        "id, member_id, amount, payment_date, purpose, notes, created_at"
-      )
+      .select("id, member_id, amount, payment_date, purpose, notes, created_at")
       .eq("member_id", memberKey)
       .order("payment_date", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    // Do not render results for a member if the modal has since changed.
     if (String(activeHistoryMemberId) !== String(memberKey)) return;
 
     const list = data || [];
@@ -1103,13 +1024,13 @@ async function savePayment(event) {
   }
 
   const amountText = paymentAmount?.value.trim() || "";
-  const paymentValue = Number(amountText);
+  const sum = Number(amountText);
   const date = paymentDate?.value || "";
   const reason = paymentPurpose?.value.trim() || "";
   const notes = paymentNotes?.value.trim() || "";
   const editing = Boolean(paymentId?.value);
 
-  if (!amountText || !Number.isFinite(paymentValue) || paymentValue <= 0) {
+  if (!amountText || !Number.isFinite(sum) || sum <= 0) {
     showPaymentMessage(
       "Enter a valid payment amount greater than zero.",
       "error"
@@ -1137,7 +1058,7 @@ async function savePayment(event) {
   try {
     const record = {
       member_id: activeHistoryMemberId,
-      amount: paymentValue,
+      amount: sum,
       payment_date: date,
       purpose: reason,
       notes: notes || null
@@ -1172,6 +1093,8 @@ async function savePayment(event) {
       "success"
     );
 
+    // Refresh general dashboard totals after saving a payment.
+    await refreshPaymentDashboard();
     await loadPaymentHistory();
   } catch (error) {
     console.error("Save payment:", error);
@@ -1201,14 +1124,13 @@ async function editPaymentRecord(id) {
       .maybeSingle();
 
     if (error) throw error;
-
-    if (!data) {
-      throw new Error("Payment record not found.");
-    }
+    if (!data) throw new Error("Payment record not found.");
 
     if (paymentId) paymentId.value = data.id;
     if (paymentAmount) paymentAmount.value = data.amount;
-    if (paymentDate) paymentDate.value = data.payment_date || localDateInputValue();
+    if (paymentDate) {
+      paymentDate.value = data.payment_date || localDateInputValue();
+    }
     if (paymentPurpose) paymentPurpose.value = data.purpose || "";
     if (paymentNotes) paymentNotes.value = data.notes || "";
 
@@ -1264,9 +1186,10 @@ async function deletePaymentRecord(id) {
     }
 
     resetPaymentForm();
-
     showPaymentMessage("Payment deleted successfully.", "success");
 
+    // Refresh general dashboard totals after deleting a payment.
+    await refreshPaymentDashboard();
     await loadPaymentHistory();
   } catch (error) {
     console.error("Delete payment:", error);
@@ -1278,9 +1201,7 @@ async function deletePaymentRecord(id) {
   }
 }
 
-// --------------------------------------------------
-// PASSWORD RECOVERY AND RESET
-// --------------------------------------------------
+/* -------------------- PASSWORD RECOVERY / RESET -------------------- */
 
 function openForgotPassword() {
   if (!forgotPasswordBox) return;
@@ -1316,8 +1237,7 @@ async function sendPasswordRecovery() {
   showRecoveryMessage("Sending password recovery email...", "info");
 
   try {
-    const redirectTo =
-      window.location.origin + window.location.pathname;
+    const redirectTo = window.location.origin + window.location.pathname;
 
     const { error } = await supabaseClient.auth.resetPasswordForEmail(
       email,
@@ -1387,9 +1307,7 @@ async function updatePassword() {
     if (confirmAdminPassword) confirmAdminPassword.value = "";
 
     setTimeout(() => {
-      if (passwordResetBox) {
-        passwordResetBox.style.display = "none";
-      }
+      if (passwordResetBox) passwordResetBox.style.display = "none";
     }, 2000);
   } catch (error) {
     console.error("Password update:", error);
@@ -1403,9 +1321,7 @@ async function updatePassword() {
   }
 }
 
-// --------------------------------------------------
-// UTILITIES
-// --------------------------------------------------
+/* -------------------- UTILITIES -------------------- */
 
 function setMessage(element, message, type) {
   if (!element) return;
@@ -1477,7 +1393,7 @@ function escapeHTML(value) {
     .replace(/'/g, "&#039;");
 }
 
-// Expose functions needed by HTML or inline handlers.
+// Make functions available to HTML and table buttons.
 window.editMember = editMember;
 window.deleteMember = deleteMember;
 window.openPaymentHistory = openPaymentHistory;

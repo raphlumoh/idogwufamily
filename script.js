@@ -78,6 +78,47 @@ const refreshButton = document.getElementById("refreshButton");
 const exportButton = document.getElementById("exportButton");
 const membersTableBody = document.getElementById("membersTableBody");
 
+const paymentHistoryBox =
+    document.getElementById("paymentHistoryBox");
+
+const paymentHistoryMemberName =
+    document.getElementById("paymentHistoryMemberName");
+
+const paymentHistoryTotal =
+    document.getElementById("paymentHistoryTotal");
+
+const paymentHistoryMessage =
+    document.getElementById("paymentHistoryMessage");
+
+const paymentHistoryBody =
+    document.getElementById("paymentHistoryBody");
+
+const paymentForm =
+    document.getElementById("paymentForm");
+
+const paymentId =
+    document.getElementById("paymentId");
+
+const paymentAmount =
+    document.getElementById("paymentAmount");
+
+const paymentDate =
+    document.getElementById("paymentDate");
+
+const paymentPurpose =
+    document.getElementById("paymentPurpose");
+
+const paymentNotes =
+    document.getElementById("paymentNotes");
+
+const savePaymentButton =
+    document.getElementById("savePaymentButton");
+
+const cancelPaymentEdit =
+    document.getElementById("cancelPaymentEdit");
+
+let activeHistoryMemberId = null;
+
 
 // =========================================================
 // DASHBOARD ELEMENTS

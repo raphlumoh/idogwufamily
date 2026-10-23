@@ -1,15 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IDOGWU FAMILY DATABASE</title>
 
     <!-- Main CSS -->
@@ -17,56 +12,26 @@
 
     <!-- Supabase JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 </head>
 
-
 <body>
-
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
-
+    <!-- HEADER -->
     <header>
-
         <h1>IDOGWU FAMILY DATABASE</h1>
-
-        <p>
-            Unity • Progress • Collective Responsibility
-        </p>
-
-        <p>
-            Family Members Registration Portal
-        </p>
-
+        <p>Unity • Progress • Collective Responsibility</p>
+        <p>Family Members Registration Portal</p>
     </header>
 
-
-    <!-- =====================================================
-         LOGIN
-    ====================================================== -->
-
-    <section
-        id="adminLoginBox"
-        class="login-wrapper"
-    >
-
+    <!-- LOGIN -->
+    <section id="adminLoginBox" class="login-wrapper">
         <div class="login-card">
-
             <h2>Membership Login</h2>
-
             <p class="login-description">
-                Please sign in to access the
-                Idogwu Family Database.
+                Please sign in to access the Idogwu Family Database.
             </p>
 
-
             <div class="form-group">
-
-                <label for="adminEmail">
-                    Enter Your Email
-                </label>
-
+                <label for="adminEmail">Enter Your Email</label>
                 <input
                     type="email"
                     id="adminEmail"
@@ -74,16 +39,10 @@
                     placeholder="Enter your email"
                     autocomplete="off"
                 >
-
             </div>
 
-
             <div class="form-group">
-
-                <label for="adminPassword">
-                    Password
-                </label>
-
+                <label for="adminPassword">Password</label>
                 <input
                     type="password"
                     id="adminPassword"
@@ -91,240 +50,250 @@
                     placeholder="Enter password"
                     autocomplete="off"
                 >
-
             </div>
 
-
-            <button
-                id="adminLoginButton"
-                class="btn btn-primary full-width"
-                type="button"
-            >
+            <button id="adminLoginButton" class="btn btn-primary full-width" type="button">
                 Login
             </button>
 
-
-            <button
-                id="forgotPasswordButton"
-                class="btn btn-light full-width"
-                type="button"
-            >
+            <button id="forgotPasswordButton" class="btn btn-light full-width" type="button">
                 Forgot Password?
             </button>
 
-
-            <div
-                id="loginMessage"
-                class="message"
-            ></div>
-
+            <div id="loginMessage" class="message"></div>
         </div>
-
     </section>
 
+    <!-- MAIN APPLICATION -->
+    <main id="adminApplication" class="container" style="display: none;">
 
-    <!-- =====================================================
-         MAIN APPLICATION
-    ====================================================== -->
-
-    <main
-        id="adminApplication"
-        class="container"
-        style="display: none;"
-    >
-
-
-        <!-- =================================================
-             TOP BAR
-        ================================================== -->
-
+        <!-- TOP BAR -->
         <section class="top-bar">
-
             <div>
-
-                <strong>
-                    IDOGWU FAMILY DATABASE
-                </strong>
-
-                <div
-                    id="loggedInUser"
-                    class="logged-user"
-                ></div>
-
+                <strong>IDOGWU FAMILY DATABASE</strong>
+                <div id="loggedInUser" class="logged-user"></div>
             </div>
 
-
-            <button
-                id="logoutButton"
-                class="btn btn-danger"
-                type="button"
-            >
+            <button id="logoutButton" class="btn btn-danger" type="button">
                 Logout
             </button>
-
         </section>
 
-
-        <!-- =================================================
-             DASHBOARD
-        ================================================== -->
-
+        <!-- DASHBOARD -->
         <section class="dashboard">
-
-
-            <!-- TOTAL MEMBERS -->
-
             <div class="stat-card">
-
-                <h3>
-                    Total Members
-                </h3>
-
-                <div
-                    id="totalMembers"
-                    class="stat-value"
-                >
-                    0
-                </div>
-
+                <h3>Total Members</h3>
+                <div id="totalMembers" class="stat-value">0</div>
             </div>
 
-
-            <!-- MEMBERS WHO PAID -->
-
             <div class="stat-card">
-
-                <h3>
-                    Members Who Paid
-                </h3>
-
-                <div
-                    id="paidMembers"
-                    class="stat-value"
-                >
-                    0
-                </div>
-
+                <h3>Members Who Paid</h3>
+                <div id="paidMembers" class="stat-value">0</div>
             </div>
 
-
-            <!-- MEMBERS NOT PAID -->
-
             <div class="stat-card">
-
-                <h3>
-                    Members Not Paid
-                </h3>
-
-                <div
-                    id="unpaidMembers"
-                    class="stat-value"
-                >
-                    0
-                </div>
-
+                <h3>Members Not Paid</h3>
+                <div id="unpaidMembers" class="stat-value">0</div>
             </div>
 
-
-            <!-- TOTAL CONTRIBUTIONS -->
-
             <div class="stat-card">
-
-                <h3>
-                    Total Contributions
-                </h3>
-
-                <div
-                    id="totalAmount"
-                    class="stat-value"
-                >
-                    ₦0.00
-                </div>
-
+                <h3>Total Contributions</h3>
+                <div id="totalAmount" class="stat-value">₦0.00</div>
             </div>
 
-
-            <!-- AVERAGE PAYMENT -->
-
             <div class="stat-card">
-
-                <h3>
-                    Average Payment
-                </h3>
-
-                <div
-                    id="averageAmount"
-                    class="stat-value"
-                >
-                    ₦0.00
-                </div>
-
+                <h3>Average Payment</h3>
+                <div id="averageAmount" class="stat-value">₦0.00</div>
             </div>
 
-
-            <!-- TOTAL LOCATIONS -->
-
             <div class="stat-card">
-
-                <h3>
-                    Locations
-                </h3>
-
-                <div
-                    id="totalLocations"
-                    class="stat-value"
-                >
-                    0
-                </div>
-
+                <h3>Locations</h3>
+                <div id="totalLocations" class="stat-value">0</div>
             </div>
-
         </section>
 
-
-        <!-- =================================================
-             FAMILY LOCATION SUMMARY
-        ================================================== -->
-
-        <section
-            class="section location-statistics-section"
-        >
-
-            <h2>
-                Family Location Summary
-            </h2>
-
-
+        <!-- FAMILY LOCATION SUMMARY -->
+        <section class="section location-statistics-section">
+            <h2>Family Location Summary</h2>
             <p class="section-subtitle">
-                Summary of registered Idogwu family members
-                by location.
+                Summary of registered Idogwu family members by location.
             </p>
 
-
-            <div
-                id="locationStatistics"
-                class="location-grid"
-            >
-
+            <div id="locationStatistics" class="location-grid">
                 <div class="table-message">
                     No location statistics available.
                 </div>
-
             </div>
-
         </section>
 
+        <!-- FAMILY FINANCIAL SUMMARY AND EXPENDITURE -->
+        <section class="section" id="expenditureSection">
+            <h2>Family Financial Summary</h2>
 
-        <!-- =================================================
-             IDOGWU FAMILY WORLDWIDE
-        ================================================== -->
+            <p class="section-subtitle">
+                View recorded family income, expenditure and the available balance.
+            </p>
 
+            <div class="dashboard">
+                <div class="stat-card">
+                    <h3>Recorded Income (Payments)</h3>
+                    <div id="financeTotalIncome" class="stat-value">₦0.00</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Total Expenditure</h3>
+                    <div id="financeTotalExpenditure" class="stat-value">₦0.00</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Available Balance</h3>
+                    <div id="financeAvailableBalance" class="stat-value">₦0.00</div>
+                </div>
+            </div>
+
+            <h3>Family Expenditure</h3>
+
+            <p class="section-subtitle">
+                All signed-in members can view these records. Only the administrator
+                can add, edit or delete an expense.
+            </p>
+
+            <!-- ADMIN-ONLY EXPENDITURE FORM -->
+            <form id="expenditureForm" style="display: none;">
+                <h3 id="expenditureFormTitle">Record Expenditure</h3>
+
+                <input type="hidden" id="expenditureId">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="expenseDate">Expense Date *</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expenseCategory">Category *</label>
+                        <select id="expenseCategory" required>
+                            <option value="">Select category</option>
+                            <option value="Family Meeting">Family Meeting</option>
+                            <option value="Welfare/Support">Welfare/Support</option>
+                            <option value="Funeral/Condolence">Funeral/Condolence</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Food/Refreshments">Food/Refreshments</option>
+                            <option value="Venue">Venue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expenseDescription">Description *</label>
+                        <input
+                            type="text"
+                            id="expenseDescription"
+                            placeholder="What was the money used for?"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount (₦) *</label>
+                        <input
+                            type="number"
+                            id="expenseAmount"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expensePaidTo">Paid To</label>
+                        <input
+                            type="text"
+                            id="expensePaidTo"
+                            placeholder="Recipient or service provider"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expenseNotes">Notes (Optional)</label>
+                        <input
+                            type="text"
+                            id="expenseNotes"
+                            placeholder="Additional details"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button
+                        type="submit"
+                        id="saveExpenditureButton"
+                        class="btn btn-primary"
+                    >
+                        Save Expenditure
+                    </button>
+
+                    <button
+                        type="button"
+                        id="clearExpenditureFormButton"
+                        class="btn btn-light"
+                        style="display: none;"
+                    >
+                        Cancel Edit
+                    </button>
+                </div>
+            </form>
+
+            <div id="expenditureMessage" class="message"></div>
+
+            <div class="toolbar">
+                <button
+                    type="button"
+                    id="refreshExpendituresButton"
+                    class="btn btn-primary"
+                >
+                    Refresh Expenditure
+                </button>
+
+                <button
+                    type="button"
+                    id="exportExpendituresButton"
+                    class="btn btn-secondary"
+                >
+                    Export Expenditure CSV
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Paid To</th>
+                            <th>Notes</th>
+                            <th id="expenditureActionsHeading">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="expenditureTableBody">
+                        <tr>
+                            <td colspan="8" class="table-message">
+                                Please sign in to view expenditure.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- IDOGWU FAMILY WORLDWIDE -->
         <section class="section">
-
-            <h2>
-                IDOGWU FAMILY WORLDWIDE
-            </h2>
-
+            <h2>IDOGWU FAMILY WORLDWIDE</h2>
 
             <p>
                 <strong>Introduction<br></strong>
@@ -334,130 +303,57 @@
                 age, background, or country of residence.
             </p>
 
-
-
-            <h3>
-                Our Vision
-            </h3>
-
-
+            <h3>Our Vision</h3>
             <p>
-                To build a united, peaceful, progressive,
-                and well-connected Idogwu family whose members
-                remain committed to preserving their heritage
-                while creating opportunities for the growth
-                and development of future generations.
+                To build a united, peaceful, progressive, and well-connected Idogwu
+                family whose members remain committed to preserving their heritage
+                while creating opportunities for the growth and development of
+                future generations.
             </p>
 
-
-            <h3>
-                Our Aims
-            </h3>
-
-
+            <h3>Our Aims</h3>
             <ul>
-
-                <li>
-                    To promote unity, love, and peaceful
-                    coexistence among Idogwu family members
-                    worldwide.
-                </li>
-
-                <li>
-                    To strengthen communication and
-                    relationships among family members.
-                </li>
-
-                <li>
-                    To preserve our family identity, heritage
-                    and values for future generations.
-                </li>
-
-                <li>
-                    To encourage collective responsibility,
-                    development and mutual support.
-                </li>
-
+                <li>To promote unity, love, and peaceful coexistence among Idogwu family members worldwide.</li>
+                <li>To strengthen communication and relationships among family members.</li>
+                <li>To preserve our family identity, heritage and values for future generations.</li>
+                <li>To encourage collective responsibility, development and mutual support.</li>
             </ul>
 
-
-            <h3>
-                Our Commitment
-            </h3>
-
-
+            <h3>Our Commitment</h3>
             <p>
-                Idogwu Family Worldwide is more than a
-                communication platform; it is a place where
-                family members can reconnect, build relationships,
+                Idogwu Family Worldwide is more than a communication platform;
+                it is a place where family members can reconnect, build relationships,
                 preserve their identity, and support one another.
             </p>
-
         </section>
 
+        <!-- MEMBER REGISTRATION -->
+        <section id="memberRegistrationSection" class="section">
+            <h2 id="formTitle">Register Family Member</h2>
 
-        <!-- =================================================
-             MEMBER REGISTRATION
-        ================================================== -->
-
-        <section
-            id="memberRegistrationSection"
-            class="section"
-        >
-
-            <h2 id="formTitle">
-                Register Family Member
-            </h2>
-
-
-            <!-- Hidden ID used when editing -->
-
-            <input
-                type="hidden"
-                id="memberId"
-            >
-
+            <input type="hidden" id="memberId">
 
             <div class="form-grid">
-
-
-                <!-- FULL NAME -->
-
                 <div class="form-group">
-
-                    <label for="fullName">
-                        Full Name *
-                    </label>
-
+                    <label for="fullName">Full Name *</label>
                     <input
                         type="text"
                         id="fullName"
                         placeholder="Enter full name"
                         autocomplete="off"
                     >
-
                 </div>
 
-
-                <!-- PHONE -->
-
                 <div class="form-group">
-
-                    <label for="phone">
-                        Phone Number *
-                    </label>
-
+                    <label for="phone">Phone Number *</label>
                     <input
                         type="tel"
                         id="phone"
                         placeholder="Enter phone number"
                         autocomplete="off"
                     >
-
                 </div>
 
-
-                <!-- Gender -->
                 <div class="form-group">
                     <label for="gender">Gender</label>
                     <select id="gender" name="gender" required>
@@ -467,7 +363,6 @@
                     </select>
                 </div>
 
-                <!-- Age -->
                 <div class="form-group">
                     <label for="age">Age (Optional)</label>
                     <input
@@ -477,14 +372,12 @@
                         min="1"
                         max="120"
                         step="1"
-                        
                     >
                 </div>
 
-                <!-- Educational Qualification -->
                 <div class="form-group">
-                    <label for="education">Highest Educational Qualification (optional) </label>
-                    <select id="education" name="education" >
+                    <label for="education">Highest Educational Qualification (optional)</label>
+                    <select id="education" name="education">
                         <option value="">Select qualification</option>
                         <option value="No Formal Education">No Formal Education</option>
                         <option value="Primary">Primary</option>
@@ -498,7 +391,6 @@
                     </select>
                 </div>
 
-                <!-- Marital Status -->
                 <div class="form-group">
                     <label for="marital_status">Marital Status</label>
                     <select id="marital_status" name="marital_status" required>
@@ -510,34 +402,18 @@
                     </select>
                 </div>
 
-               
-
-                <!-- LOCATION -->
-
                 <div class="form-group">
-
-                    <label for="location">
-                        Location *
-                    </label>
-
+                    <label for="location">Location *</label>
                     <input
                         type="text"
                         id="location"
                         placeholder="State / City / Country"
                         autocomplete="off"
                     >
-
                 </div>
 
-
-                <!-- AMOUNT -->
-
                 <div class="form-group">
-
-                    <label for="amount">
-                        Contribution Amount
-                    </label>
-
+                    <label for="amount">Contribution Amount</label>
                     <input
                         type="number"
                         id="amount"
@@ -545,80 +421,37 @@
                         step="0.01"
                         placeholder="0"
                     >
-
                 </div>
 
-
-                <!-- PURPOSE -->
-
                 <div class="form-group">
-
-                    <label for="purpose">
-                        Purpose
-                    </label>
-
+                    <label for="purpose">Purpose</label>
                     <input
                         type="text"
                         id="purpose"
                         placeholder="Purpose of contribution"
                         autocomplete="off"
                     >
-
                 </div>
-
             </div>
 
-
-            <!-- FORM BUTTONS -->
-
             <div class="form-actions">
-
-                <button
-                    id="saveMemberButton"
-                    class="btn btn-primary"
-                    type="button"
-                >
+                <button id="saveMemberButton" class="btn btn-primary" type="button">
                     Save Member
                 </button>
 
-
-                <button
-                    id="clearFormButton"
-                    class="btn btn-light"
-                    type="button"
-                >
+                <button id="clearFormButton" class="btn btn-light" type="button">
                     Clear Form
                 </button>
-
             </div>
 
-
-            <!-- FORM MESSAGE -->
-
-            <div
-                id="memberMessage"
-                class="message"
-            ></div>
-
+            <div id="memberMessage" class="message"></div>
         </section>
 
-
-        <!-- =================================================
-             MEMBER DATABASE
-        ================================================== -->
-
+        <!-- REGISTERED FAMILY MEMBERS -->
         <section class="section">
-
-            <h2>
-                Registered Family Members
-            </h2>
-
-
-            <!-- SEARCH AND BUTTONS -->
+            <h2>Registered Family Members</h2>
 
             <div class="toolbar">
-
-                
                 <input
                     type="text"
                     id="searchInput"
@@ -626,334 +459,240 @@
                     autocomplete="off"
                 >
 
-
-
-                <button
-                    id="refreshButton"
-                    class="btn btn-primary"
-                    type="button"
-                >
+                <button id="refreshButton" class="btn btn-primary" type="button">
                     Refresh
                 </button>
 
-
-                <button
-                    id="exportButton"
-                    class="btn btn-secondary"
-                    type="button"
-                >
+                <button id="exportButton" class="btn btn-secondary" type="button">
                     Export CSV
                 </button>
-
-            </div>
- 
-<!-- TABLE -->
-<div class="table-container">
-    <table><thead>
-             <tr>
-                <th>S/N</th>
-                <th>Full Name</th>
-                <th>Phone</th>
-                <th>Location</th>
-                <th>Gender</th>
-                <th>Age</th>
-                <th>Education</th>
-                <th>Marital Status</th>
-                <th>Amount</th>
-                <th>Purpose</th>
-                <th>Date</th>
-                <th>Total Paid</th>
-                <th>Actions</th>
-            </tr>
-    </thead>
-<tbody id="membersTableBody"></tbody>
-            <tr>
-                <td colspan="13" class="table-message">
-                    Please login to view members.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-
-
-<!-- PAYMENT HISTORY MODAL -->
-<div id="paymentHistoryBox" class="modal" style="display: none;">
-    <div class="modal-card" style="width: 95%; max-width: 1000px;">
-
-        <h2>Member Payment History</h2>
-
-        <p id="paymentHistoryMemberName"></p>
-
-        <p>
-            Total Recorded Payments:
-            <strong id="paymentHistoryTotal">₦0.00</strong>
-        </p>
-
-        <div id="paymentHistoryMessage" class="message"></div>
-
-        <!-- Admin-only payment form -->
-        <form id="paymentForm" style="display: none;">
-            <h3 id="paymentFormTitle">Add Payment</h3>
-
-            <input type="hidden" id="paymentId">
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="paymentAmount">Amount (₦) *</label>
-                    <input
-                        type="number"
-                        id="paymentAmount"
-                        min="0.01"
-                        step="0.01"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="paymentDate">Payment Date *</label>
-                    <input type="date" id="paymentDate" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="paymentPurpose">Purpose *</label>
-                    <input
-                        type="text"
-                        id="paymentPurpose"
-                        placeholder="e.g. Family dues"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="paymentNotes">Notes (Optional)</label>
-                    <input
-                        type="text"
-                        id="paymentNotes"
-                        placeholder="Additional details"
-                    >
-                </div>
             </div>
 
-            <div class="form-actions">
-                <button
-                    type="submit"
-                    id="savePaymentButton"
-                    class="btn btn-primary"
-                >
-                    Save Payment
-                </button>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Full Name</th>
+                            <th>Phone</th>
+                            <th>Location</th>
+                            <th>Gender</th>
+                            <th>Age</th>
+                            <th>Education</th>
+                            <th>Marital Status</th>
+                            <th>Amount</th>
+                            <th>Purpose</th>
+                            <th>Date</th>
+                            <th>Total Paid</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
 
-                <button
-                    type="button"
-                    id="cancelPaymentEdit"
-                    class="btn btn-light"
-                >
-                    Clear
-                </button>
+                    <tbody id="membersTableBody">
+                        <tr>
+                            <td colspan="13" class="table-message">
+                                Please login to view members.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        </form>
+        </section>
 
-        <h3>Payment Records</h3>
+        <!-- PAYMENT HISTORY MODAL -->
+        <div id="paymentHistoryBox" class="modal" style="display: none;">
+            <div class="modal-card" style="width: 95%; max-width: 1000px;">
+                <h2>Member Payment History</h2>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>S/N</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Purpose</th>
-                        <th>Notes</th>
-                        <th id="paymentActionsHeading">Actions</th>
-                    </tr>
-                </thead>
+                <p id="paymentHistoryMemberName"></p>
 
-                <tbody id="paymentHistoryBody">
-                    <tr>
-                        <td colspan="6">No payment records loaded.</td>
-                    </tr>
-                </tbody>
-            </table>
+                <p>
+                    Total Recorded Payments:
+                    <strong id="paymentHistoryTotal">₦0.00</strong>
+                </p>
+
+                <div id="paymentHistoryMessage" class="message"></div>
+
+                <!-- Admin-only payment form -->
+                <form id="paymentForm" style="display: none;">
+                    <h3 id="paymentFormTitle">Add Payment</h3>
+
+                    <input type="hidden" id="paymentId">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="paymentAmount">Amount (₦) *</label>
+                            <input type="number" id="paymentAmount" min="0.01" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentDate">Payment Date *</label>
+                            <input type="date" id="paymentDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentPurpose">Purpose *</label>
+                            <input
+                                type="text"
+                                id="paymentPurpose"
+                                placeholder="e.g. Family dues"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentNotes">Notes (Optional)</label>
+                            <input
+                                type="text"
+                                id="paymentNotes"
+                                placeholder="Additional details"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            id="savePaymentButton"
+                            class="btn btn-primary"
+                        >
+                            Save Payment
+                        </button>
+
+                        <button
+                            type="button"
+                            id="cancelPaymentEdit"
+                            class="btn btn-light"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                </form>
+
+                <h3>Payment Records</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S/N</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Purpose</th>
+                                <th>Notes</th>
+                                <th id="paymentActionsHeading">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="paymentHistoryBody">
+                            <tr>
+                                <td colspan="6">No payment records loaded.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-actions">
+                    <button
+                        type="button"
+                        id="closePaymentHistory"
+                        class="btn btn-light"
+                    >
+                        Close History
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <div class="modal-actions">
-            <button
-                type="button"
-                id="closePaymentHistory"
-                class="btn btn-light"
-            >
-                Close History
-            </button>
-        </div>
+        <!-- FORGOT PASSWORD MODAL -->
+        <div id="forgotPasswordBox" class="modal">
+            <div class="modal-card">
+                <h2>Forgot Password</h2>
 
-    </div>
-</div>
+                <p>
+                    Enter your administrator email address.
+                    A password recovery link will be sent to you.
+                </p>
 
-    <!-- =====================================================
-         FORGOT PASSWORD MODAL
-    ====================================================== -->
-
-    <div
-        id="forgotPasswordBox"
-        class="modal"
-    >
-
-        <div class="modal-card">
-
-            <h2>
-                Forgot Password
-            </h2>
-
-
-            <p>
-                Enter your administrator email address.
-                A password recovery link will be sent to you.
-            </p>
-
-
-            <div class="form-group">
-
-                <label for="recoveryEmail">
-                    Administrator Email
-                </label>
-
-                <input
-                    type="email"
-                    id="recoveryEmail"
-                    placeholder="Enter email address"
-                    autocomplete="off"
-                >
-
-            </div>
-
-
-            <button
-                id="sendRecoveryButton"
-                class="btn btn-primary full-width"
-                type="button"
-            >
-                Send Recovery Email
-            </button>
-
-
-            <div
-                id="recoveryMessage"
-                class="message"
-            ></div>
-
-
-            <div class="modal-actions">
+                <div class="form-group">
+                    <label for="recoveryEmail">Administrator Email</label>
+                    <input
+                        type="email"
+                        id="recoveryEmail"
+                        placeholder="Enter email address"
+                        autocomplete="off"
+                    >
+                </div>
 
                 <button
-                    id="closeForgotPassword"
-                    class="btn btn-light"
+                    id="sendRecoveryButton"
+                    class="btn btn-primary full-width"
                     type="button"
                 >
-                    Close
+                    Send Recovery Email
                 </button>
 
-            </div>
+                <div id="recoveryMessage" class="message"></div>
 
+                <div class="modal-actions">
+                    <button
+                        id="closeForgotPassword"
+                        class="btn btn-light"
+                        type="button"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
 
-    </div>
+        <!-- PASSWORD RESET MODAL -->
+        <div id="passwordResetBox" class="modal">
+            <div class="modal-card">
+                <h2>Reset Administrator Password</h2>
+                <p>Enter your new administrator password.</p>
 
+                <div class="form-group">
+                    <label for="newAdminPassword">New Password</label>
+                    <input
+                        type="password"
+                        id="newAdminPassword"
+                        placeholder="Enter new password"
+                        autocomplete="new-password"
+                    >
+                </div>
 
-    <!-- =====================================================
-         PASSWORD RESET MODAL
-    ====================================================== -->
+                <div class="form-group">
+                    <label for="confirmAdminPassword">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="confirmAdminPassword"
+                        placeholder="Confirm new password"
+                        autocomplete="new-password"
+                    >
+                </div>
 
-    <div
-        id="passwordResetBox"
-        class="modal"
-    >
-
-        <div class="modal-card">
-
-            <h2>
-                Reset Administrator Password
-            </h2>
-
-
-            <p>
-                Enter your new administrator password.
-            </p>
-
-
-            <div class="form-group">
-
-                <label for="newAdminPassword">
-                    New Password
-                </label>
-
-                <input
-                    type="password"
-                    id="newAdminPassword"
-                    placeholder="Enter new password"
-                    autocomplete="new-password"
+                <button
+                    id="saveNewPassword"
+                    class="btn btn-primary full-width"
+                    type="button"
                 >
+                    Save New Password
+                </button>
 
+                <div id="resetMessage" class="message"></div>
             </div>
-
-
-            <div class="form-group">
-
-                <label for="confirmAdminPassword">
-                    Confirm Password
-                </label>
-
-                <input
-                    type="password"
-                    id="confirmAdminPassword"
-                    placeholder="Confirm new password"
-                    autocomplete="new-password"
-                >
-
-            </div>
-
-
-            <button
-                id="saveNewPassword"
-                class="btn btn-primary full-width"
-                type="button"
-            >
-                Save New Password
-            </button>
-
-
-            <div
-                id="resetMessage"
-                class="message"
-            ></div>
-
         </div>
+    </main>
 
-    </div>
-
-
-    <!-- =====================================================
-         FOOTER
-    ====================================================== -->
-
+    <!-- FOOTER -->
     <footer>
-
         IDOGWU FAMILY DATABASE
-
         <br>
-
         Unity • Progress • Collective Responsibility
-
     </footer>
 
-
-    <!-- =====================================================
-         APPLICATION JAVASCRIPT
-    ====================================================== -->
-
+    <!-- APPLICATION JAVASCRIPT -->
     <script src="script.js"></script>
-
 </body>
-
 </html>

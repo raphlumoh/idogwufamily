@@ -20,6 +20,8 @@ let currentUsername = "";
 let allMembers = [];
 let allPaymentRecords = [];
 let paymentDashboardError = false;
+let allExpenditures = [];
+let expenditureLoadError = false;
 let activeHistoryMemberId = null;
 
 const $ = (id) => document.getElementById(id);
@@ -89,9 +91,26 @@ const cancelPaymentEdit = $("cancelPaymentEdit");
 const paymentActionsHeading = $("paymentActionsHeading");
 const closePaymentHistory = $("closePaymentHistory");
 
+const expenditureForm = $("expenditureForm");
+const expenditureId = $("expenditureId");
+const expenseDate = $("expenseDate");
+const expenseCategory = $("expenseCategory");
+const expenseDescription = $("expenseDescription");
+const expenseAmount = $("expenseAmount");
+const expensePaidTo = $("expensePaidTo");
+const expenseNotes = $("expenseNotes");
+const saveExpenditureButton = $("saveExpenditureButton");
+const clearExpenditureFormButton = $("clearExpenditureFormButton");
+const expenditureMessage = $("expenditureMessage");
+const expenditureTableBody = $("expenditureTableBody");
+const expenditureActionsHeading = $("expenditureActionsHeading");
+const refreshExpendituresButton = $("refreshExpendituresButton");
+const exportExpendituresButton = $("exportExpendituresButton");
+
 if (adminApplication) adminApplication.style.display = "none";
 if (adminLoginBox) adminLoginBox.style.display = "block";
 if (paymentHistoryBox) paymentHistoryBox.style.display = "none";
+if (expenditureForm) expenditureForm.style.display = "none";
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupEventListeners();
@@ -138,6 +157,20 @@ function setupEventListeners() {
   cancelPaymentEdit?.addEventListener("click", resetPaymentForm);
   closePaymentHistory?.addEventListener("click", closePaymentHistoryModal);
 
+  expenditureForm?.addEventListener("submit", saveExpenditure);
+  clearExpenditureFormButton?.addEventListener("click", resetExpenditureForm);
+  refreshExpendituresButton?.addEventListener("click", loadExpenditures);
+  exportExpendituresButton?.addEventListener("click", exportExpendituresCSV);
+
+  expenditureTableBody?.addEventListener("click", (e) => {
+    const button = e.target.closest("button[data-expense-action]");
+    if (!button || !expenditureTableBody.contains(button)) return;
+    if (!isAdmin()) return alert("Only administrators can change expenditure records.");
+
+    if (button.dataset.expenseAction === "edit") editExpenditure(button.dataset.id);
+    if (button.dataset.expenseAction === "delete") deleteExpenditure(button.dataset.id);
+  });
+
   paymentHistoryBody?.addEventListener("click", (e) => {
     const button = e.target.closest("button[data-payment-action]");
     if (!button || !paymentHistoryBody.contains(button)) return;
@@ -167,6 +200,8 @@ function setupEventListeners() {
       currentUsername = "";
       allMembers = [];
       allPaymentRecords = [];
+      allExpenditures = [];
+      expenditureLoadError = false;
       closePaymentHistoryModal();
       showLoginScreen();
     }
@@ -230,6 +265,7 @@ async function startApplication() {
   await loadUserRole(currentUser.id);
   showApplication();
   await loadMembers();
+  await loadExpenditures();
 }
 
 async function loadUserRole(userId) {
@@ -271,6 +307,8 @@ function applyPermissions() {
   if (exportButton) exportButton.style.display = isAdmin() ? "inline-block" : "none";
   if (paymentForm) paymentForm.style.display = isAdmin() ? "block" : "none";
   if (paymentActionsHeading) paymentActionsHeading.style.display = isAdmin() ? "" : "none";
+  if (expenditureForm) expenditureForm.style.display = isAdmin() ? "block" : "none";
+  if (expenditureActionsHeading) expenditureActionsHeading.style.display = isAdmin() ? "" : "none";
 }
 
 function showApplication() {
@@ -305,8 +343,11 @@ async function logoutUser() {
   currentUsername = "";
   allMembers = [];
   allPaymentRecords = [];
+  allExpenditures = [];
+  expenditureLoadError = false;
 
   clearMemberForm();
+  resetExpenditureForm();
   closePaymentHistoryModal();
   showLoginScreen();
 }
@@ -366,6 +407,7 @@ async function refreshPaymentDashboard() {
   renderMembers();
 }
 
+
 function updateDashboard() {
   const total = allMembers.length;
   let sum = 0;
@@ -394,25 +436,31 @@ function updateDashboard() {
   if (totalMembers) totalMembers.textContent = total;
   if (paidMembers) paidMembers.textContent = paymentDashboardError ? "—" : paid;
   if (unpaidMembers) unpaidMembers.textContent = paymentDashboardError ? "—" : unpaid;
+
   if (totalAmount) {
-    totalAmount.textContent = paymentDashboardError ? "Unable to load" : formatCurrency(sum);
+    totalAmount.textContent = paymentDashboardError
+      ? "Unable to load"
+      : formatCurrency(sum);
   }
+
   if (averageAmount) {
     averageAmount.textContent = paymentDashboardError
       ? "Unable to load"
-      : formatCurrency(allPaymentRecords.length ? sum / allPaymentRecords.length : 0);
+      : formatCurrency(
+          allPaymentRecords.length ? sum / allPaymentRecords.length : 0
+        );
   }
+
   if (totalLocations) totalLocations.textContent = locations.size;
+
+  updateFinanceDashboard();
 }
 
-// NEW: calculate the total payment-history amount for one member.
 function getMemberTotalPaid(memberIdValue) {
   if (paymentDashboardError) return null;
 
   return allPaymentRecords.reduce((sum, payment) => {
-    if (String(payment.member_id) !== String(memberIdValue)) {
-      return sum;
-    }
+    if (String(payment.member_id) !== String(memberIdValue)) return sum;
 
     const value = Number(payment.amount || 0);
     return sum + (Number.isFinite(value) ? value : 0);
@@ -475,7 +523,6 @@ function renderMembers() {
       </div>
     `;
 
-    // Show a dash if payment history could not be loaded.
     const memberTotalPaid = getMemberTotalPaid(member.id);
     const totalPaidDisplay = memberTotalPaid === null
       ? "Unable to load"
@@ -534,7 +581,8 @@ function renderLocationStatistics() {
 
       const count = document.createElement("div");
       count.className = "location-count";
-      count.textContent = `${item.count} ${item.count === 1 ? "Member" : "Members"}`;
+      count.textContent =
+        `${item.count} ${item.count === 1 ? "Member" : "Members"}`;
 
       card.append(name, count);
       locationStatistics.appendChild(card);
@@ -562,7 +610,7 @@ async function saveMember() {
 
   if (!fullName || !phone || !locationInput || !gender || !maritalStatus) {
     return showMemberMessage(
-      "Some required form elements are missing from index.html.",
+      "Some required form elements are missing from the HTML file.",
       "error"
     );
   }
@@ -587,7 +635,6 @@ async function saveMember() {
     return gender.focus();
   }
 
-  // Age is optional.
   let ageValue = null;
 
   if (ageText !== "") {
@@ -602,7 +649,6 @@ async function saveMember() {
     }
   }
 
-  // Education is optional.
   if (!marital) {
     showMemberMessage("Please select the marital status.", "error");
     return maritalStatus.focus();
@@ -656,15 +702,13 @@ async function saveMember() {
     await loadMembers();
 
     showMemberMessage(
-      editing
-        ? "Member information updated successfully."
-        : "Member added successfully.",
+      editing ? "Member updated successfully." : "Member registered successfully.",
       "success"
     );
   } catch (error) {
     console.error("Save member:", error);
     showMemberMessage(
-      `Unable to save member: ${error.message || error}`,
+      error.message || "Unable to save member.",
       "error"
     );
   } finally {
@@ -672,16 +716,31 @@ async function saveMember() {
   }
 }
 
+function clearMemberForm() {
+  if (memberId) memberId.value = "";
+  if (fullName) fullName.value = "";
+  if (phone) phone.value = "";
+  if (locationInput) locationInput.value = "";
+  if (gender) gender.value = "";
+  if (age) age.value = "";
+  if (education) education.value = "";
+  if (maritalStatus) maritalStatus.value = "";
+  if (amount) amount.value = "";
+  if (purpose) purpose.value = "";
+
+  if (saveMemberButton) saveMemberButton.textContent = "Save Member";
+
+  const title = $("formTitle");
+  if (title) title.textContent = "Register Family Member";
+
+  showMemberMessage("", "");
+}
+
 function editMember(id) {
-  if (!isAdmin()) {
-    return alert("You do not have permission to edit members.");
-  }
+  if (!isAdmin()) return alert("Only the administrator can edit members.");
 
   const member = allMembers.find((item) => String(item.id) === String(id));
-
-  if (!member) {
-    return alert("Member not found. Please refresh and try again.");
-  }
+  if (!member) return alert("Member not found. Refresh the list and try again.");
 
   if (memberId) memberId.value = member.id;
   if (fullName) fullName.value = member.full_name || "";
@@ -691,171 +750,70 @@ function editMember(id) {
   if (age) age.value = member.age ?? "";
   if (education) education.value = member.education || "";
   if (maritalStatus) maritalStatus.value = member.marital_status || "";
-  if (amount) amount.value = member.amount ?? 0;
+  if (amount) amount.value = member.amount ?? "";
   if (purpose) purpose.value = member.purpose || "";
 
-  if (saveMemberButton) {
-    saveMemberButton.textContent = "Update Member";
-    saveMemberButton.disabled = false;
-  }
+  if (saveMemberButton) saveMemberButton.textContent = "Update Member";
 
-  showMemberMessage(
-    `Editing ${member.full_name || "member"}. Make changes, then click Update Member.`,
-    "info"
-  );
+  const title = $("formTitle");
+  if (title) title.textContent = "Edit Family Member";
 
-  $("memberRegistrationSection")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
-  fullName?.focus();
+  showMemberMessage("Editing selected member.", "info");
+  $("memberRegistrationSection")?.scrollIntoView({ behavior: "smooth" });
 }
 
 async function deleteMember(id) {
-  if (!isAdmin()) {
-    return alert("You do not have permission to delete members.");
-  }
+  if (!isAdmin()) return alert("Only the administrator can delete members.");
 
   const member = allMembers.find((item) => String(item.id) === String(id));
+  if (!member) return alert("Member not found.");
 
-  if (!member) {
-    return alert("Member not found. Please refresh and try again.");
-  }
-
-  if (!confirm(
-    `Delete ${member.full_name || "this member"}? Related payment history may also be deleted by the database foreign-key rule.`
-  )) {
-    return;
-  }
+  const confirmed = confirm(
+    `Delete ${member.full_name} from the family database? This cannot be undone.`
+  );
+  if (!confirmed) return;
 
   try {
-    const { data, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from("idogwu_members")
       .delete()
-      .eq("id", id)
-      .select("id");
+      .eq("id", id);
 
     if (error) throw error;
 
-    if (!data?.length) {
-      throw new Error("No member was deleted. Check Supabase permissions.");
-    }
-
-    if (String(memberId?.value) === String(id)) clearMemberForm();
-
-    if (String(activeHistoryMemberId) === String(id)) {
-      closePaymentHistoryModal();
-    }
-
     await loadMembers();
-    alert("Member deleted successfully.");
+    showMemberMessage("Member deleted successfully.", "success");
   } catch (error) {
     console.error("Delete member:", error);
-    alert(`Unable to delete member: ${error.message || error}`);
-  }
-}
-
-function clearMemberForm() {
-  [
-    memberId,
-    fullName,
-    phone,
-    locationInput,
-    gender,
-    age,
-    education,
-    maritalStatus,
-    amount,
-    purpose
-  ].forEach((element) => {
-    if (element) element.value = "";
-  });
-
-  if (saveMemberButton) {
-    saveMemberButton.textContent = "Save Member";
-    saveMemberButton.disabled = false;
-  }
-
-  if (memberMessage) {
-    memberMessage.textContent = "";
-    memberMessage.className = "message";
+    alert(`Unable to delete member: ${error.message || "Unknown error"}`);
   }
 }
 
 function exportCSV() {
-  if (!isAdmin()) {
-    return alert("Only administrators can export member data.");
-  }
-
-  if (!allMembers.length) {
-    return alert("There are no members to export.");
-  }
-
-  const term = String(searchInput?.value || "").trim().toLowerCase();
-
-  const list = term
-    ? allMembers.filter((member) => memberMatchesSearch(member, term))
-    : allMembers;
-
-  if (!list.length) {
-    return alert("There are no matching members to export.");
-  }
+  if (!isAdmin()) return alert("Only the administrator can export member records.");
 
   const headers = [
-    "S/N",
-    "Full Name",
-    "Phone",
-    "Location",
-    "Gender",
-    "Age",
-    "Educational Qualification",
-    "Marital Status",
-    "Amount",
-    "Purpose",
-    "Date"
+    "Full Name", "Phone", "Location", "Gender", "Age", "Education",
+    "Marital Status", "Amount", "Purpose", "Date", "Total Paid"
   ];
 
-  const rows = list.map((member, index) => [
-    index + 1,
-    member.full_name || "",
-    member.phone || "",
-    member.location || "",
-    member.gender || "",
+  const rows = allMembers.map((member) => [
+    member.full_name,
+    member.phone,
+    member.location,
+    member.gender,
     member.age ?? "",
-    member.education || "",
-    member.marital_status || "",
-    Number(member.amount || 0).toFixed(2),
-    member.purpose || "",
-    formatDate(member.created_at)
+    member.education ?? "",
+    member.marital_status,
+    member.amount ?? 0,
+    member.purpose ?? "",
+    formatDate(member.created_at),
+    getMemberTotalPaid(member.id) ?? "Unable to load"
   ]);
 
-  const csv = [headers, ...rows]
-    .map((row) =>
-      row.map((value) =>
-        `"${String(value ?? "").replace(/"/g, '""')}"`
-      ).join(",")
-    )
-    .join("\r\n");
-
-  const blob = new Blob(["\uFEFF" + csv], {
-    type: "text/csv;charset=utf-8;"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "idogwu_family_members.csv";
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadCSV("idogwu-family-members.csv", [headers, ...rows]);
 }
 
-/* -------------------- PAYMENT HISTORY -------------------- */
 
 function localDateInputValue() {
   const date = new Date();
@@ -1230,6 +1188,419 @@ async function deletePaymentRecord(id) {
   }
 }
 
+/* -------------------- FAMILY EXPENDITURE -------------------- */
+
+
+/* -------------------- FAMILY EXPENDITURE -------------------- */
+
+function showExpenditureMessage(message, type = "info") {
+  setMessage(expenditureMessage, message, type);
+}
+
+function updateFinanceDashboard() {
+  const incomeElement = $("financeTotalIncome");
+  const expenditureElement = $("financeTotalExpenditure");
+  const balanceElement = $("financeAvailableBalance");
+
+  const income = allPaymentRecords.reduce((sum, payment) => {
+    const value = Number(payment.amount || 0);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+  const expenditure = allExpenditures.reduce((sum, item) => {
+    const value = Number(item.amount || 0);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+  if (incomeElement) {
+    incomeElement.textContent = paymentDashboardError
+      ? "Unable to load"
+      : formatCurrency(income);
+  }
+
+  if (expenditureElement) {
+    expenditureElement.textContent = expenditureLoadError
+      ? "Unable to load"
+      : formatCurrency(expenditure);
+  }
+
+  if (balanceElement) {
+    balanceElement.textContent =
+      paymentDashboardError || expenditureLoadError
+        ? "Unable to calculate"
+        : formatCurrency(income - expenditure);
+  }
+}
+
+function resetExpenditureForm() {
+  if (expenditureId) expenditureId.value = "";
+  if (expenseDate) expenseDate.value = localDateInputValue();
+  if (expenseCategory) expenseCategory.value = "";
+  if (expenseDescription) expenseDescription.value = "";
+  if (expenseAmount) expenseAmount.value = "";
+  if (expensePaidTo) expensePaidTo.value = "";
+  if (expenseNotes) expenseNotes.value = "";
+
+  if (saveExpenditureButton) {
+    saveExpenditureButton.textContent = "Save Expenditure";
+    saveExpenditureButton.disabled = false;
+  }
+
+  if (clearExpenditureFormButton) {
+    clearExpenditureFormButton.style.display = "none";
+  }
+}
+
+async function loadExpenditures() {
+  if (!currentUser || !expenditureTableBody) return;
+
+  const columns = isAdmin() ? 8 : 7;
+
+  expenditureTableBody.innerHTML =
+    `<tr><td colspan="${columns}" class="table-message">Loading expenditure...</td></tr>`;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("idogwu_expenditures")
+      .select(
+        "id, expense_date, category, description, amount, paid_to, notes, recorded_by, created_at"
+      )
+      .order("expense_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    allExpenditures = data || [];
+    expenditureLoadError = false;
+
+    renderExpenditures();
+    updateFinanceDashboard();
+
+    showExpenditureMessage("", "");
+  } catch (error) {
+    console.error("Load expenditures:", error);
+
+    allExpenditures = [];
+    expenditureLoadError = true;
+
+    expenditureTableBody.innerHTML =
+      `<tr><td colspan="${columns}" class="table-message">Unable to load expenditure: ${escapeHTML(error.message || "Unknown error")}</td></tr>`;
+
+    updateFinanceDashboard();
+
+    showExpenditureMessage(
+      `Unable to load expenditure: ${error.message || error}`,
+      "error"
+    );
+  }
+}
+
+function renderExpenditures() {
+  if (!expenditureTableBody) return;
+
+  const admin = isAdmin();
+  const columns = admin ? 8 : 7;
+
+  if (!allExpenditures.length) {
+    expenditureTableBody.innerHTML =
+      `<tr><td colspan="${columns}" class="table-message">No expenditure records have been recorded yet.</td></tr>`;
+    return;
+  }
+
+  expenditureTableBody.innerHTML = "";
+
+  allExpenditures.forEach((item, index) => {
+    const row = document.createElement("tr");
+
+    const actions = admin
+      ? `
+        <td>
+          <div class="action-buttons">
+            <button type="button"
+              class="btn btn-warning"
+              data-expense-action="edit"
+              data-id="${escapeHTML(item.id)}">Edit</button>
+
+            <button type="button"
+              class="btn btn-danger"
+              data-expense-action="delete"
+              data-id="${escapeHTML(item.id)}">Delete</button>
+          </div>
+        </td>`
+      : "";
+
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${formatDate(item.expense_date)}</td>
+      <td>${escapeHTML(item.category)}</td>
+      <td>${escapeHTML(item.description)}</td>
+      <td>${formatCurrency(item.amount)}</td>
+      <td>${escapeHTML(item.paid_to || "")}</td>
+      <td>${escapeHTML(item.notes || "")}</td>
+      ${actions}
+    `;
+
+    expenditureTableBody.appendChild(row);
+  });
+}
+
+async function saveExpenditure(event) {
+  event?.preventDefault();
+
+  if (!isAdmin()) {
+    return showExpenditureMessage(
+      "Only administrators can add or edit expenditure records.",
+      "error"
+    );
+  }
+
+  const date = expenseDate?.value || "";
+  const category = expenseCategory?.value || "";
+  const description = expenseDescription?.value.trim() || "";
+  const amountText = expenseAmount?.value.trim() || "";
+  const value = Number(amountText);
+  const paidTo = expensePaidTo?.value.trim() || "";
+  const notes = expenseNotes?.value.trim() || "";
+  const editing = Boolean(expenditureId?.value);
+
+  if (
+    !date ||
+    !category ||
+    !description ||
+    !amountText ||
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+    return showExpenditureMessage(
+      "Please enter a date, category, description and a valid amount greater than zero.",
+      "error"
+    );
+  }
+
+  if (saveExpenditureButton) {
+    saveExpenditureButton.disabled = true;
+  }
+
+  showExpenditureMessage(
+    editing ? "Updating expenditure..." : "Saving expenditure...",
+    "info"
+  );
+
+  try {
+    const record = {
+      expense_date: date,
+      category,
+      description,
+      amount: value,
+      paid_to: paidTo || null,
+      notes: notes || null
+    };
+
+    const result = editing
+      ? await supabaseClient
+          .from("idogwu_expenditures")
+          .update(record)
+          .eq("id", expenditureId.value)
+          .select("id")
+      : await supabaseClient
+          .from("idogwu_expenditures")
+          .insert(record)
+          .select("id");
+
+    if (result.error) throw result.error;
+
+    if (!result.data?.length) {
+      throw new Error(
+        "No expenditure was saved. Check Supabase permissions."
+      );
+    }
+
+    resetExpenditureForm();
+
+    showExpenditureMessage(
+      editing
+        ? "Expenditure updated successfully."
+        : "Expenditure recorded successfully.",
+      "success"
+    );
+
+    await loadExpenditures();
+  } catch (error) {
+    console.error("Save expenditure:", error);
+
+    showExpenditureMessage(
+      `Unable to save expenditure: ${error.message || error}`,
+      "error"
+    );
+  } finally {
+    if (saveExpenditureButton) {
+      saveExpenditureButton.disabled = false;
+    }
+  }
+}
+
+function editExpenditure(id) {
+  if (!isAdmin()) {
+    return alert("Only administrators can edit expenditure records.");
+  }
+
+  const item = allExpenditures.find(
+    (entry) => String(entry.id) === String(id)
+  );
+
+  if (!item) {
+    return alert(
+      "Expenditure record not found. Please refresh and try again."
+    );
+  }
+
+  if (expenditureId) expenditureId.value = item.id;
+  if (expenseDate) {
+    expenseDate.value = item.expense_date || localDateInputValue();
+  }
+  if (expenseCategory) expenseCategory.value = item.category || "";
+  if (expenseDescription) expenseDescription.value = item.description || "";
+  if (expenseAmount) expenseAmount.value = item.amount ?? "";
+  if (expensePaidTo) expensePaidTo.value = item.paid_to || "";
+  if (expenseNotes) expenseNotes.value = item.notes || "";
+
+  if (saveExpenditureButton) {
+    saveExpenditureButton.textContent = "Update Expenditure";
+  }
+
+  if (clearExpenditureFormButton) {
+    clearExpenditureFormButton.style.display = "inline-block";
+  }
+
+  showExpenditureMessage(
+    "Editing expenditure record. Make your changes and click Update Expenditure.",
+    "info"
+  );
+
+  expenditureForm?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  expenseDate?.focus();
+}
+
+async function deleteExpenditure(id) {
+  if (!isAdmin()) {
+    return alert("Only administrators can delete expenditure records.");
+  }
+
+  const item = allExpenditures.find(
+    (entry) => String(entry.id) === String(id)
+  );
+
+  if (!item) {
+    return alert(
+      "Expenditure record not found. Please refresh and try again."
+    );
+  }
+
+  if (
+    !confirm(
+      `Delete this expenditure record (${formatCurrency(item.amount)} — ${item.description})? This cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("idogwu_expenditures")
+      .delete()
+      .eq("id", id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!data?.length) {
+      throw new Error(
+        "No expenditure was deleted. Check Supabase permissions."
+      );
+    }
+
+    resetExpenditureForm();
+
+    showExpenditureMessage(
+      "Expenditure deleted successfully.",
+      "success"
+    );
+
+    await loadExpenditures();
+  } catch (error) {
+    console.error("Delete expenditure:", error);
+
+    showExpenditureMessage(
+      `Unable to delete expenditure: ${error.message || error}`,
+      "error"
+    );
+  }
+}
+
+function exportExpendituresCSV() {
+  if (!currentUser) {
+    return alert("Please sign in to export expenditure records.");
+  }
+
+  if (expenditureLoadError) {
+    return alert(
+      "Expenditure records could not be loaded. Refresh before exporting."
+    );
+  }
+
+  if (!allExpenditures.length) {
+    return alert("There are no expenditure records to export.");
+  }
+
+  const headers = [
+    "S/N",
+    "Date",
+    "Category",
+    "Description",
+    "Amount",
+    "Paid To",
+    "Notes"
+  ];
+
+  const rows = allExpenditures.map((item, index) => [
+    index + 1,
+    formatDate(item.expense_date),
+    item.category || "",
+    item.description || "",
+    Number(item.amount || 0).toFixed(2),
+    item.paid_to || "",
+    item.notes || ""
+  ]);
+
+  const csv = [headers, ...rows]
+    .map((row) =>
+      row
+        .map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`)
+        .join(",")
+    )
+    .join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "idogwu_family_expenditure.csv";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 /* -------------------- PASSWORD RECOVERY / RESET -------------------- */
 
 function openForgotPassword() {
@@ -1266,12 +1637,13 @@ async function sendPasswordRecovery() {
   showRecoveryMessage("Sending password recovery email...", "info");
 
   try {
-    const redirectTo = window.location.origin + window.location.pathname;
+    const redirectTo =
+      window.location.origin + window.location.pathname;
 
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(
-      email,
-      { redirectTo }
-    );
+    const { error } =
+      await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo
+      });
 
     if (error) throw error;
 
@@ -1316,7 +1688,10 @@ async function updatePassword() {
   }
 
   if (password !== confirmPassword) {
-    return showResetMessage("The passwords do not match.", "error");
+    return showResetMessage(
+      "The passwords do not match.",
+      "error"
+    );
   }
 
   if (saveNewPassword) saveNewPassword.disabled = true;
@@ -1428,3 +1803,6 @@ window.deleteMember = deleteMember;
 window.openPaymentHistory = openPaymentHistory;
 window.loadPaymentHistory = loadPaymentHistory;
 window.closePaymentHistoryModal = closePaymentHistoryModal;
+window.editExpenditure = editExpenditure;
+window.deleteExpenditure = deleteExpenditure;
+window.loadExpenditures = loadExpenditures;
